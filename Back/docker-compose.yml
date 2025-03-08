@@ -1,0 +1,39 @@
+version: "3.8"
+
+networks:
+  app:
+    name: app
+
+services:
+  api: 
+    image: python:3.9-slim
+    networks:
+        - app
+
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=${FLASK_ENV}
+    env_file:
+      .env  # Charge les variables du fichier .env
+    depends_on:
+      - db
+    volumes:
+      - ./api:/api
+    command: ["sh", "-c", "pip install -r /api/requirements.txt && python /api/app.py"]
+
+  db:
+    networks:
+      - app
+
+    container_name: database
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+      - ./db/script/init.sql:/docker-entrypoint-initdb.d/init.sql
